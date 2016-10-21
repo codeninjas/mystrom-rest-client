@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="tests/src/bootstrap.php" colors="true">
+    <!--<phpunit colors="true">-->
+    <testsuites>
+        <testsuite name="CI-Tests">
+            <file>tests/src/ClientMockTest.php</file>
+        </testsuite>
+    </testsuites>
+</phpunit>
