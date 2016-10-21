@@ -1,0 +1,35 @@
+{
+    "name": "codeninjas/mystrom-rest-client",
+    "description": "",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Michael Ramstein",
+            "email": "michael@ramste.in"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Codeninjas\\API\\MyStrom\\REST\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Codeninjas\\API\\MyStrom\\RESTTest\\": "tests/src/"
+        }
+    },
+    "require": {
+        "psr/http-message": "^1.0",
+        "psr/log": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5.4",
+        "guzzlehttp/psr7": "^1.0",
+        "guzzlehttp/guzzle": "^6.2"
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-debug-phpstorm": "XDEBUG_CONFIG=\"idekey=PHPSTORM\" phpunit",
+        "test-debug-netbeans": "XDEBUG_CONFIG=\"idekey=netbeans-xdebug\" phpunit"
+    }
+}
