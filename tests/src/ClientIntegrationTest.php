@@ -16,7 +16,7 @@ class ClientIntegrationTest extends Base\TestBase
     {
         $status = $this->client->getStatus();
 
-        $this->assertNotEmpty($status->getPower());
+        $this->assertNotNull($status->getPower());
         $this->assertNotEmpty($status->getRelay());
     }
 
