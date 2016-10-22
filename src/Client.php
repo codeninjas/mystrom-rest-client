@@ -53,7 +53,7 @@ class Client
     public function getStatus() : Status
     {
         $method = 'GET';
-        $url = 'report';
+        $url = self::ROUTES_REPORT;
         $payload = [];
 
         $response = $this->transport->dispatch($method, $url, $payload);
@@ -62,6 +62,42 @@ class Client
         }
 
         return $this->mapper->mapResponseToStatus($response);
+    }
+
+    public function powerOn()
+    {
+        return $this->setPower(true);
+    }
+
+    public function powerOff()
+    {
+        return $this->setPower(false);
+    }
+
+    protected function setPower(bool $powerOn)
+    {
+        $method = 'GET';
+        $url = self::ROUTES_RELAY;
+        $payload = [
+            'state' => (int)$powerOn
+        ];
+
+        $response = $this->transport->dispatch($method, $url, $payload);
+        return $response->getStatusCode() == 200;
+    }
+
+    public function powerToggle()
+    {
+        $method = 'GET';
+        $url = self::ROUTES_TOGGLE;
+        $payload = [];
+
+        $response = $this->transport->dispatch($method, $url, $payload);
+        if (!$response instanceof JsonResponse) {
+            throw new \Exception('Expected json response, got ' . get_class($response));
+        }
+
+        return $this->mapper->mapResponseToRelayStatus($response);
     }
 
     //--------------------------------------------[GETTER & SETTER]--------------------------------------------
