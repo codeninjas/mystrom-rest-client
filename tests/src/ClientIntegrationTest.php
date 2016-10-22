@@ -20,6 +20,24 @@ class ClientIntegrationTest extends Base\TestBase
         $this->assertNotEmpty($status->getRelay());
     }
 
+    public function testPowerOn()
+    {
+        $power = $this->client->powerOn();
+        $this->assertTrue($power);
+    }
+
+    public function testPowerOff()
+    {
+        $power = $this->client->powerOff();
+        $this->assertTrue($power);
+    }
+
+    public function testPowerToggle()
+    {
+        $power = $this->client->powerToggle();
+        $this->assertNotEmpty($power->getPower());
+    }
+
     protected function setUp()
     {
         $guzzleTransport = $this->setupGuzzleTransport();
