@@ -2,6 +2,7 @@
 
 namespace Codeninjas\API\MyStrom\REST;
 
+use Codeninjas\API\MyStrom\REST\Model\Info;
 use Codeninjas\API\MyStrom\REST\Model\Status;
 use Codeninjas\API\MyStrom\REST\Transport\JsonResponse;
 use Psr\Log\LoggerInterface;
@@ -50,6 +51,20 @@ class Client
         }
     }
 
+    public function getInfo() : Info
+    {
+        $method = 'GET';
+        $url = self::ROUTES_INFO;
+        $payload = [];
+
+        $response = $this->transport->dispatch($method, $url, $payload);
+        if (!$response instanceof JsonResponse) {
+            throw new \Exception('Expected json response, got ' . get_class($response));
+        }
+
+        return $this->mapper->mapResponseToInfo($response->getPayload());
+    }
+
     public function getStatus() : Status
     {
         $method = 'GET';
@@ -61,7 +76,7 @@ class Client
             throw new \Exception('Expected json response, got ' . get_class($response));
         }
 
-        return $this->mapper->mapResponseToStatus($response);
+        return $this->mapper->mapResponseToStatus($response->getPayload());
     }
 
     public function powerOn()
@@ -97,7 +112,7 @@ class Client
             throw new \Exception('Expected json response, got ' . get_class($response));
         }
 
-        return $this->mapper->mapResponseToRelayStatus($response);
+        return $this->mapper->mapResponseToRelayStatus($response->getPayload());
     }
 
     //--------------------------------------------[GETTER & SETTER]--------------------------------------------

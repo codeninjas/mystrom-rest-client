@@ -17,7 +17,7 @@ class ClientIntegrationTest extends Base\TestBase
         $status = $this->client->getStatus();
 
         $this->assertNotNull($status->getPower());
-        $this->assertNotEmpty($status->getRelay());
+        $this->assertNotNull($status->getRelay());
     }
 
     public function testPowerOn()
@@ -36,6 +36,15 @@ class ClientIntegrationTest extends Base\TestBase
     {
         $power = $this->client->powerToggle();
         $this->assertNotEmpty($power->getPower());
+    }
+
+    public function testGetInfo()
+    {
+        $result = $this->client->getInfo();
+        $this->assertNotEmpty($result->getVersion());
+        $this->assertNotEmpty($result->getMac());
+        $this->assertNotEmpty($result->getSsid());
+        $this->assertNotEmpty($result->isConnected());
     }
 
     protected function setUp()

@@ -60,8 +60,9 @@ class GuzzleTransport implements TransportInterface
      */
     private function psrResponseToResponse(ResponseInterface $rawResponse) : Response
     {
-//        $contentTypes = $rawResponse->getHeader('Content-Type');
-        switch (current($rawResponse->getHeader('Content-Type'))) {
+        $body = $rawResponse->getBody()->getContents();
+        $contentTypes = $rawResponse->getHeader('Content-Type');
+        switch ($contentTypes[0]) {
             case 'application/json' :
                 $response = new JsonResponse();
                 break;
@@ -73,10 +74,9 @@ class GuzzleTransport implements TransportInterface
         $response->setStatusCode($rawResponse->getStatusCode());
 
         if ($response instanceof JsonResponse) {
-            $response->setPayload(json_decode($rawResponse->getBody()->getContents(), true));
+            $response->setPayload(json_decode($body, true));
         }
 
-        // TODO: Map GuzzleResponse to
         return $response;
     }
 }
