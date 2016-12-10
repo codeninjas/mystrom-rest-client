@@ -5,7 +5,14 @@ namespace Codeninjas\API\MyStrom\REST;
 use Codeninjas\API\MyStrom\REST\Model\Info;
 use Codeninjas\API\MyStrom\REST\Model\Status;
 use Codeninjas\API\MyStrom\REST\Transport\JsonResponse;
-use Psr\Log\LoggerInterface;
+use Codeninjas\API\MyStrom\REST\Transport\Response;
+use Http\Client\Common\HttpMethodsClient;
+use Http\Discovery\HttpClientDiscovery;
+use Http\Discovery\MessageFactoryDiscovery;
+use Http\Discovery\UriFactoryDiscovery;
+use Http\Message\Authentication\Chain;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
 
 class Client
 {
@@ -26,29 +33,69 @@ class Client
     const ROUTES_IP = '/ip';
     const ROUTES_LOAD = '/load';
 
-    /** @var  TransportInterface */
-    protected $transport;
-
     /** @var  Mapper */
     protected $mapper;
 
+    /** @var HttpMethodsClient */
+    protected $httpClient;
+
+    /** @var \Http\Message\MessageFactory */
+    protected $messageFactory;
+
+    /** @var HttpMethodsClient */
+    protected $httpMethodsClient;
+
+    /** @var \Http\Message\Authentication */
+    protected $authentication;
+
+    /** @var  \Http\Message\UriFactory */
+    protected $uriFactory;
+
+    /** @var  UriInterface */
+    protected $baseUri;
+
     /**
      * Client constructor.
-     * @param TransportInterface $transport
-     * @param Mapper $mapper
-     * @param LoggerInterface $logger
+     * @param string $baseUrl
+     * @param \Http\Message\Authentication $authentication
+     * @param \Http\Client\HttpClient $httpClient
+     * @param \Http\Message\MessageFactory $messageFactory
+     * @param \Http\Message\UriFactory $uriFactory
+     * @param \Psr\Log\LoggerInterface $logger
      */
-    public function __construct(TransportInterface $transport, Mapper $mapper = null, LoggerInterface $logger = null)
-    {
-        $this->setLogger($logger);
-
-        $this->transport = $transport;
-
-        $this->mapper = $mapper;
-        if (null === $this->mapper) {
-            $this->mapper = new Mapper();
-            $this->mapper->setLogger($this->getLogger());
+    public function __construct(
+        string $baseUrl,
+        \Http\Message\Authentication $authentication = null,
+        \Http\Client\HttpClient $httpClient = null,
+        \Http\Message\MessageFactory $messageFactory = null,
+        \Http\Message\UriFactory $uriFactory = null,
+        \Psr\Log\LoggerInterface $logger = null
+    ) {
+        if (!isset($uriFactory)) {
+            $uriFactory = $uriFactory ?: UriFactoryDiscovery::find();;
         }
+
+        $this->baseUri = $uriFactory->createUri($baseUrl);
+
+        if (!isset($authentication)) {
+            // Use a Empty Chain as "NullAuthenticator"
+            $this->authentication = new Chain();
+        }
+        if (!isset($httpClient)) {
+            $this->httpClient = HttpClientDiscovery::find();
+        }
+        if (!isset($messageFactory)) {
+            $this->messageFactory = MessageFactoryDiscovery::find();
+        }
+
+        $this->httpMethodsClient = new HttpMethodsClient(
+            $this->httpClient,
+            $this->messageFactory
+        );
+
+        $this->setLogger($logger);
+        $this->mapper = new Mapper();
+        $this->mapper->setLogger($this->getLogger());
     }
 
     public function getInfo() : Info
@@ -57,7 +104,7 @@ class Client
         $url = self::ROUTES_INFO;
         $payload = [];
 
-        $response = $this->transport->dispatch($method, $url, $payload);
+        $response = $this->dispatch($method, $url, $payload);
         if (!$response instanceof JsonResponse) {
             throw new \Exception('Expected json response, got ' . get_class($response));
         }
@@ -71,7 +118,7 @@ class Client
         $url = self::ROUTES_REPORT;
         $payload = [];
 
-        $response = $this->transport->dispatch($method, $url, $payload);
+        $response = $this->dispatch($method, $url, $payload);
         if (!$response instanceof JsonResponse) {
             throw new \Exception('Expected json response, got ' . get_class($response));
         }
@@ -97,7 +144,7 @@ class Client
             'state' => (int)$powerOn
         ];
 
-        $response = $this->transport->dispatch($method, $url, $payload);
+        $response = $this->dispatch($method, $url, $payload);
         return $response->getStatusCode() == 200;
     }
 
@@ -107,7 +154,7 @@ class Client
         $url = self::ROUTES_TOGGLE;
         $payload = [];
 
-        $response = $this->transport->dispatch($method, $url, $payload);
+        $response = $this->dispatch($method, $url, $payload);
         if (!$response instanceof JsonResponse) {
             throw new \Exception('Expected json response, got ' . get_class($response));
         }
@@ -115,40 +162,47 @@ class Client
         return $this->mapper->mapResponseToRelayStatus($response->getPayload());
     }
 
-    //--------------------------------------------[GETTER & SETTER]--------------------------------------------
-    /**
-     * @return TransportInterface
-     */
-    public function getTransport()
+    protected function dispatch(string $method, string $url, array $payload = null) : Response
     {
-        return $this->transport;
+        $query = http_build_query($payload);
+        $body = '';
+        $uri = $this->baseUri->withPath($url);
+        if ($method === 'GET') {
+            $uri = $uri->withQuery($query);
+        } else {
+            $body = $query;
+        };
+
+        $request = $this->messageFactory->createRequest($method, $uri, [], $body);
+        $request = $this->authentication->authenticate($request);
+        $psrResponse = $this->httpMethodsClient->sendRequest($request);
+        $response = $this->psrResponseToResponse($psrResponse);
+        return $response;
     }
 
     /**
-     * @param TransportInterface $transport
-     * @return $this
+     * @param ResponseInterface $rawResponse
+     * @return Response
      */
-    public function setTransport(TransportInterface $transport)
+    private function psrResponseToResponse(ResponseInterface $rawResponse) : Response
     {
-        $this->transport = $transport;
-        return $this;
-    }
+        $body = $rawResponse->getBody()->getContents();
+        $contentTypes = $rawResponse->getHeader('Content-Type');
+        switch ($contentTypes[0]) {
+            case 'application/json' :
+                $response = new JsonResponse();
+                break;
+            default:
+                $response = new Response();
+                break;
+        }
 
-    /**
-     * @return Mapper
-     */
-    public function getMapper()
-    {
-        return $this->mapper;
-    }
+        $response->setStatusCode($rawResponse->getStatusCode());
 
-    /**
-     * @param Mapper $mapper
-     * @return $this
-     */
-    public function setMapper(Mapper $mapper)
-    {
-        $this->mapper = $mapper;
-        return $this;
+        if ($response instanceof JsonResponse) {
+            $response->setPayload(json_decode($body, true));
+        }
+
+        return $response;
     }
 }
