@@ -2,18 +2,16 @@
 
 namespace Codeninjas\API\MyStrom\REST;
 
+use Codeninjas\API\MyStrom\REST\Model\Info;
 use Codeninjas\API\MyStrom\REST\Model\RelayStatus;
 use Codeninjas\API\MyStrom\REST\Model\Status;
-use Codeninjas\API\MyStrom\REST\Transport\JsonResponse;
 
 class Mapper
 {
     use LoggerTrait;
 
-    public function mapResponseToStatus(JsonResponse $response, Status $status = null): Status
+    public function mapResponseToStatus(array $payload, Status $status = null): Status
     {
-        $payload = $response->getPayload();
-
         if ($status === null) {
             $status = new Status();
         }
@@ -33,10 +31,8 @@ class Mapper
         return $status;
     }
 
-    public function mapResponseToRelayStatus(JsonResponse $response, RelayStatus $status = null): RelayStatus
+    public function mapResponseToRelayStatus(array $payload, RelayStatus $status = null): RelayStatus
     {
-        $payload = $response->getPayload();
-
         if ($status === null) {
             $status = new RelayStatus();
         }
@@ -64,5 +60,50 @@ class Mapper
         }
 
         return $dateTime->format(\DateTime::ATOM);
+    }
+
+    public function mapResponseToInfo(array $payload, Info $result = null): Info
+    {
+        if ($result === null) {
+            $result = new Info();
+        }
+
+        if (isset($payload['version'])) {
+            $result->setVersion($payload['version']);
+        }
+
+        if (isset($payload['mac'])) {
+            $result->setMac($payload['mac']);
+        }
+
+        if (isset($payload['ssid'])) {
+            $result->setSsid($payload['ssid']);
+        }
+
+        if (isset($payload['ip'])) {
+            $result->setIp($payload['ip']);
+        }
+
+        if (isset($payload['mask'])) {
+            $result->setMask($payload['mask']);
+        }
+
+        if (isset($payload['gateway'])) {
+            $result->setGateway($payload['gateway']);
+        }
+
+        if (isset($payload['dns'])) {
+            $result->setDns($payload['dns']);
+        }
+
+        if (isset($payload['static'])) {
+            $result->setStatic($payload['static']);
+        }
+
+        if (isset($payload['connected'])) {
+            $result->setConnected(boolval($payload['connected']));
+        }
+
+        return $result;
     }
 }

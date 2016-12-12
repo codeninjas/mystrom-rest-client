@@ -9,12 +9,6 @@ class TestBase extends \PHPUnit_Framework_TestCase
 {
     protected $config;
 
-    protected function setupGuzzleTransport() : GuzzleTransport
-    {
-        $phpUnitConfig = $this->getConfig();
-        return new GuzzleTransport($this->setupGuzzleClient(), $phpUnitConfig['apiKey']);
-    }
-
     public function getConfig() : array
     {
         if (null === $this->config) {
