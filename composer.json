@@ -36,7 +36,6 @@
     },
     "scripts": {
         "test": "phpunit",
-        "test-debug-phpstorm": "XDEBUG_CONFIG=\"idekey=PHPSTORM\" phpunit",
-        "test-debug-netbeans": "XDEBUG_CONFIG=\"idekey=netbeans-xdebug\" phpunit"
+        "test-debug": "XDEBUG_CONFIG=\"idekey=my-xdebug-key\" phpunit"
     }
 }
