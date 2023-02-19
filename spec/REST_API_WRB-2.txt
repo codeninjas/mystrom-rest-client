@@ -1,0 +1,54 @@
+WIFI BULB – REST API
+
+The myStrom WiFi BULB offers a REST API (REST = representational State Transfer).
+The interface allows you to access/control the bulb directly from your local network independently from myStrom - you don’t need a myStrom account or the myStrom app.
+With those rules you can integrate the switch in almost any environment.
+
+Important Note
+The interface is transparent and has no authentication. If someone has access to your local network, they will be able to control your switch.
+Please apply strong security mechanisms to protect your network.
+
+Set State
+ON – curl -d "action=on" http://[IP]/api/v1/device/[MAC]
+OFF – curl -d "action=off" http://[IP]/api/v1/device/[MAC]
+TOGGLE – curl -d "action=toggle" http://[IP]/api/v1/device/[MAC]
+
+Get Values
+curl http://[IP]/api/v1/device/[MAC]
+
+{
+	"6001940376FA": {"type": "rgblamp", "battery": false, "reachable": true, "meshroot": false, "on": true, "color": "0;0;100", "power": 5.8, "fw_version": "2.19"
+}
+
+Set Color RGB
+WHITE – curl -d "color=FF000000" http://[IP]/api/v1/device/[MAC]
+RED – curl -d "color=00FF0000" http://[IP]/api/v1/device/[MAC]
+GREEN – curl -d "color=0000FF00" http://[IP]/api/v1/device/[MAC]
+BLUE – curl -d "color=000000FF" http://[IP]/api/v1/device/[MAC]
+
+Set Color HSV
+curl -d "color=0;0;100" http://[IP]/api/v1/device/[MAC]
+
+Dimming with RGBW color values
+curl -d „action=on&ramp=1000&color=00FF0000" http://[IP]/api/v1/device/[MAC]
+
+Dimming with HSV color values
+curl -d „action=on&ramp=1000&color=20;20;44" http://[IP]/api/v1/device/[MAC]
+
+
+Example in JSON
+{
+"18FE34D18A9C":
+{
+ "action": "toggle",
+ "ramp": 1000
+},
+"112233445566":
+{
+ "ramp": 1000,
+ "color": "00FFFFFF"
+},
+}
+
+[IP] – IP Address of your Bulb e.g. 192.168.1.99
+[MAC] – MAC Address of your Bulb e.g 5CCF7F02D676 (all capital letters / no „:“)
